@@ -33,206 +33,6 @@
       }
     }
     </script>
-    
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'GA_MEASUREMENT_ID');
-    </script>
-    
-    <!-- Built-in Analytics -->
-    <script>
-        class WishTimeAnalytics {
-            constructor() {
-                this.sessionId = this.generateSessionId();
-                this.startTime = new Date();
-                this.events = [];
-                this.init();
-            }
-            
-            generateSessionId() {
-                return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            }
-            
-            init() {
-                this.trackPageView();
-                this.setupEventTracking();
-                this.trackUserBehavior();
-            }
-            
-            trackPageView() {
-                this.trackEvent('page_view', {
-                    page: window.location.pathname,
-                    referrer: document.referrer,
-                    user_agent: navigator.userAgent,
-                    screen_resolution: `${screen.width}x${screen.height}`,
-                    viewport_size: `${window.innerWidth}x${window.innerHeight}`,
-                    timestamp: new Date().toISOString()
-                });
-            }
-            
-            trackEvent(eventName, data = {}) {
-                const event = {
-                    session_id: this.sessionId,
-                    event: eventName,
-                    timestamp: new Date().toISOString(),
-                    ...data
-                };
-                
-                this.events.push(event);
-                
-                // Store in localStorage for persistence
-                try {
-                    const storedEvents = JSON.parse(localStorage.getItem('wishtime_analytics') || '[]');
-                    storedEvents.push(event);
-                    // Keep only last 1000 events
-                    if (storedEvents.length > 1000) {
-                        storedEvents.splice(0, storedEvents.length - 1000);
-                    }
-                    localStorage.setItem('wishtime_analytics', JSON.stringify(storedEvents));
-                } catch (e) {
-                    console.log('Analytics storage not available');
-                }
-                
-                // Send to server (placeholder - replace with your analytics endpoint)
-                this.sendToServer(event);
-            }
-            
-            sendToServer(event) {
-                // Replace with your analytics endpoint
-                // fetch('/api/analytics', {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify(event)
-                // }).catch(err => console.log('Analytics send failed:', err));
-                
-                console.log('Analytics Event:', event);
-            }
-            
-            setupEventTracking() {
-                // Track button clicks
-                document.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('btn')) {
-                        this.trackEvent('button_click', {
-                            button_id: e.target.id,
-                            button_text: e.target.textContent.trim()
-                        });
-                    }
-                });
-                
-                // Track scroll depth
-                let maxScroll = 0;
-                window.addEventListener('scroll', () => {
-                    const scrollPercent = Math.round((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100);
-                    if (scrollPercent > maxScroll) {
-                        maxScroll = scrollPercent;
-                        if (maxScroll % 25 === 0) { // Track every 25%
-                            this.trackEvent('scroll_depth', { depth: maxScroll });
-                        }
-                    }
-                });
-                
-                // Track time on page
-                setInterval(() => {
-                    const timeOnPage = Math.floor((new Date() - this.startTime) / 1000);
-                    if (timeOnPage % 60 === 0) { // Every minute
-                        this.trackEvent('time_on_page', { seconds: timeOnPage });
-                    }
-                }, 1000);
-            }
-            
-            trackUserBehavior() {
-                // Track theme changes
-                document.getElementById('themeToggle').addEventListener('click', () => {
-                    this.trackEvent('theme_toggle', {
-                        new_theme: document.body.dataset.theme === 'light' ? 'dark' : 'light'
-                    });
-                });
-                
-                // Track time format changes
-                document.getElementById('timeFormatToggle').addEventListener('click', () => {
-                    this.trackEvent('time_format_toggle');
-                });
-                
-                // Track notification permission
-                document.getElementById('notifyBtn').addEventListener('click', () => {
-                    this.trackEvent('notification_request');
-                });
-                
-                // Track wish moments
-                window.addEventListener('wishMomentReached', () => {
-                    this.trackEvent('wish_moment_reached');
-                });
-            }
-            
-            trackWishMoment() {
-                this.trackEvent('wish_moment_celebration');
-            }
-            
-            getAnalyticsData() {
-                try {
-                    return JSON.parse(localStorage.getItem('wishtime_analytics') || '[]');
-                } catch (e) {
-                    return [];
-                }
-            }
-            
-            getBasicStats() {
-                const events = this.getAnalyticsData();
-                const stats = {
-                    totalEvents: events.length,
-                    uniqueSessions: [...new Set(events.map(e => e.session_id))].length,
-                    pageViews: events.filter(e => e.event === 'page_view').length,
-                    buttonClicks: events.filter(e => e.event === 'button_click').length,
-                    wishMoments: events.filter(e => e.event === 'wish_moment_reached').length,
-                    averageTimeOnPage: this.calculateAverageTimeOnPage(events),
-                    topReferrers: this.getTopReferrers(events),
-                    deviceTypes: this.getDeviceTypes(events)
-                };
-                return stats;
-            }
-            
-            calculateAverageTimeOnPage(events) {
-                const timeEvents = events.filter(e => e.event === 'time_on_page');
-                if (timeEvents.length === 0) return 0;
-                const total = timeEvents.reduce((sum, e) => sum + (e.seconds || 0), 0);
-                return Math.round(total / timeEvents.length);
-            }
-            
-            getTopReferrers(events) {
-                const referrers = events
-                    .filter(e => e.event === 'page_view' && e.referrer)
-                    .map(e => e.referrer);
-                const counts = {};
-                referrers.forEach(ref => counts[ref] = (counts[ref] || 0) + 1);
-                return Object.entries(counts)
-                    .sort(([,a], [,b]) => b - a)
-                    .slice(0, 5);
-            }
-            
-            getDeviceTypes(events) {
-                const userAgents = events
-                    .filter(e => e.event === 'page_view' && e.user_agent)
-                    .map(e => e.user_agent);
-                const mobile = userAgents.filter(ua => /Mobile|Android|iPhone/i.test(ua)).length;
-                const desktop = userAgents.length - mobile;
-                return { mobile, desktop };
-            }
-        }
-        
-        // Initialize analytics
-        window.wishTimeAnalytics = new WishTimeAnalytics();
-        
-        // Add analytics dashboard (accessible via console)
-        window.getWishTimeStats = () => {
-            const stats = window.wishTimeAnalytics.getBasicStats();
-            console.table(stats);
-            return stats;
-        };
-    </script>
     <style>
         :root {
             --bg-primary: #0a0a0f;
@@ -639,7 +439,7 @@
     <div class="container">
         <header class="header">
             <h1>✨ Wish Time ✨</h1>
-            <p>Catch those magical moments when time aligns perfectly for you - Make a wish when the time is alignment for you !</p>
+            <p>Catch those magical moments when time aligns perfectly for you - Make a wish when the time is aligned for you !</p>
             
             <div class="controls">
                 <button class="btn" id="themeToggle">🌙 Dark Mode</button>
@@ -907,20 +707,12 @@
                 const celebration = document.getElementById('celebration');
                 celebration.style.display = 'block';
                 
-                // Track wish moment
-                if (window.wishTimeAnalytics) {
-                    window.wishTimeAnalytics.trackWishMoment();
-                }
-                
                 if (this.notificationsEnabled) {
                     new Notification('🌟 Wish Time!', {
                         body: 'Perfect time to make a wish! The numbers are aligned!',
                         icon: '✨'
                     });
                 }
-                
-                // Dispatch custom event
-                window.dispatchEvent(new CustomEvent('wishMomentReached'));
                 
                 setTimeout(() => {
                     celebration.style.display = 'none';
