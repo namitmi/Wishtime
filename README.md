@@ -3,7 +3,8 @@
 ✨ Wish Time
 Catch magical moments when time aligns perfectly
 Never miss 11:11, 12:12, or any special time moment again!
-🚀 Try Wish Time Now | 📱 Mobile Demo | ⭐ Star on GitHub
+
+🚀 Try Wish Time Now | ⭐ Star on GitHub
 
 🌟 What is Wish Time?
 Wish Time is a beautiful web application that tracks those special moments when time digits align perfectly - like 11:11, 12:12, 01:01, and more. These moments are considered magical for making wishes across cultures worldwide.
@@ -20,6 +21,7 @@ Wish Time is a beautiful web application that tracks those special moments when 
 🔔 Smart Notifications - Get alerted before special moments
 
 📱 Mobile Friendly - Perfect on any device
+
 
 🎯 Perfect for...
 
